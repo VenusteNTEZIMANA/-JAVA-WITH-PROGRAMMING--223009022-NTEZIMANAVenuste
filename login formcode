@@ -1,0 +1,185 @@
+package com.sams;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class LoginFrame extends JFrame {
+
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JComboBox<String> roleBox;
+    private JButton loginButton;
+    private final AuthService auth = AuthService.getInstance();
+
+    public LoginFrame() {
+        setTitle("🏆 SAMS - Login");
+        setSize(900, 550);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        setResizable(false);
+
+        // ===== LEFT SIDE (IMAGE) =====
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setBackground(new Color(25, 25, 112)); // navy-blue tone
+
+        JLabel imgLabel = new JLabel();
+        imgLabel.setIcon(new ImageIcon("C:/Users/YEHOSI/Desktop/sports_login_bg.jpg")); // ✅ your local image
+        imgLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        leftPanel.add(imgLabel, BorderLayout.CENTER);
+
+        JLabel systemTitle = new JLabel("Sports Assistant Management System", SwingConstants.CENTER);
+        systemTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        systemTitle.setForeground(Color.WHITE);
+        systemTitle.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        leftPanel.add(systemTitle, BorderLayout.SOUTH);
+
+        add(leftPanel, BorderLayout.WEST);
+        leftPanel.setPreferredSize(new Dimension(500, 550));
+
+        // ===== RIGHT SIDE (FORM) =====
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(null);
+        rightPanel.setBackground(Color.WHITE);
+
+        JLabel welcome = new JLabel("Welcome Back!", SwingConstants.CENTER);
+        welcome.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        welcome.setBounds(80, 40, 300, 40);
+        rightPanel.add(welcome);
+
+        JLabel signIn = new JLabel("Sign in to continue", SwingConstants.CENTER);
+        signIn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        signIn.setForeground(Color.GRAY);
+        signIn.setBounds(80, 75, 300, 30);
+        rightPanel.add(signIn);
+
+        JLabel userLabel = new JLabel("Username:");
+        userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        userLabel.setBounds(80, 130, 100, 30);
+        rightPanel.add(userLabel);
+
+        usernameField = new JTextField();
+        usernameField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        usernameField.setBounds(80, 160, 300, 35);
+        rightPanel.add(usernameField);
+
+        JLabel passLabel = new JLabel("Password:");
+        passLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        passLabel.setBounds(80, 210, 100, 30);
+        rightPanel.add(passLabel);
+
+        passwordField = new JPasswordField();
+        passwordField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        passwordField.setBounds(80, 240, 300, 35);
+        rightPanel.add(passwordField);
+
+        JLabel roleLabel = new JLabel("Role:");
+        roleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        roleLabel.setBounds(80, 290, 100, 30);
+        rightPanel.add(roleLabel);
+
+        roleBox = new JComboBox<String>(new String[]{"ADMIN", "COACH", "PLAYER"});
+        roleBox.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        roleBox.setBounds(80, 320, 300, 35);
+        rightPanel.add(roleBox);
+
+        // === Login Button ===
+        loginButton = new JButton("Login");
+        styleButton(loginButton, new Color(25, 118, 210));
+        loginButton.setBounds(80, 380, 300, 40);
+        rightPanel.add(loginButton);
+
+        // === “Create Account” link instead of button ===
+        final JLabel createAccountLabel = new JLabel("📝 Create Account");
+        createAccountLabel.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        createAccountLabel.setForeground(new Color(25, 118, 210));
+        createAccountLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        createAccountLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        createAccountLabel.setBounds(80, 440, 300, 30);
+        rightPanel.add(createAccountLabel);
+
+        add(rightPanel, BorderLayout.CENTER);
+
+        // ====== Actions ======
+        loginButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                doLogin();
+            }
+        });
+
+        createAccountLabel.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                dispose();
+                new RegisterFrame().setVisible(true);
+            }
+
+            public void mouseEntered(MouseEvent e) {
+                createAccountLabel.setText("<html><u>📝 Create Account</u></html>");
+            }
+
+            public void mouseExited(MouseEvent e) {
+                createAccountLabel.setText("📝 Create Account");
+            }
+        });
+    }
+
+    private void styleButton(final JButton btn, final Color color) {
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btn.setBackground(color);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setOpaque(true);
+
+        final Color base = color;
+        final Color hover = base.brighter();
+        btn.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btn.setBackground(hover); }
+            public void mouseExited(MouseEvent e) { btn.setBackground(base); }
+        });
+    }
+
+    // === SAME BACKEND ===
+    private void doLogin() {
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in username and password.",
+                    "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        User user = auth.login(username, password);
+        if (user == null) {
+            JOptionPane.showMessageDialog(this, "Invalid username or password!",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        User.Role selectedRole = User.Role.valueOf(roleBox.getSelectedItem().toString());
+        if (user.getRole() == null || !user.getRole().equals(selectedRole)) {
+            JOptionPane.showMessageDialog(this, "Role mismatch! You are a " + user.getRole(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        dispose();
+        if (user.getRole() == User.Role.ADMIN)
+            new AdminDashboard(user).setVisible(true);
+        else if (user.getRole() == User.Role.COACH)
+            new CoachDashboard(user).setVisible(true);
+        else
+            new PlayerDashboard(user).setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new LoginFrame().setVisible(true);
+            }
+        });
+    }
+}
