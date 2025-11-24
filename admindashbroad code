@@ -1,0 +1,155 @@
+package com.sams;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class AdminDashboard extends JFrame {
+
+    private final DBHelper db = DBHelper.getInstance();
+    private final User user;
+
+    public AdminDashboard(User u) {
+        this.user = u;
+
+        setTitle("🏆 SAMS - Admin Dashboard");
+        setSize(940, 620);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(new Color(245, 247, 255));
+        setResizable(false);
+
+        // === HEADER ===
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(new Color(25, 25, 112));
+        header.setPreferredSize(new Dimension(940, 65));
+
+        JLabel lblTitle = new JLabel("Administrator Dashboard", SwingConstants.LEFT);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitle.setForeground(Color.WHITE);
+        lblTitle.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 10));
+        header.add(lblTitle, BorderLayout.WEST);
+
+        JLabel lblUser = new JLabel("👤 " + user.getUsername(), SwingConstants.RIGHT);
+        lblUser.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        lblUser.setForeground(Color.WHITE);
+        lblUser.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 20));
+        header.add(lblUser, BorderLayout.EAST);
+
+        add(header, BorderLayout.NORTH);
+
+        // === GRID PANEL ===
+        JPanel grid = new JPanel(new GridLayout(2, 3, 25, 25));
+        grid.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+        grid.setBackground(new Color(245, 247, 255));
+
+        grid.add(createCard("👥 Manage Users", "Add / Edit / Delete Users", new Color(33, 150, 243),
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        new ManageUsersDialog(AdminDashboard.this).setVisible(true);
+                    }
+                }));
+
+        grid.add(createCard("🏟 Manage Teams", "View and edit teams", new Color(76, 175, 80),
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        new ManageTeamsDialog(AdminDashboard.this).setVisible(true);
+                    }
+                }));
+
+        grid.add(createCard("🏅 Manage Matches", "Schedule & track matches", new Color(255, 152, 0),
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        new ManageMatchesDialog(AdminDashboard.this, user).setVisible(true);
+                    }
+                }));
+
+        grid.add(createCard("⚙ Equipment", "View and assign equipment", new Color(156, 39, 176),
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        new ManageEquipmentDialog(AdminDashboard.this, user).setVisible(true);
+                    }
+                }));
+
+        grid.add(createCard("📊 Reports", "Performance and activity stats", new Color(255, 87, 34),
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        new ReportsDialog(AdminDashboard.this, user).setVisible(true);
+                    }
+                }));
+
+        grid.add(createCard("🔧 Settings", "System configuration", new Color(0, 150, 136),
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        new ManageSettingsDialog(AdminDashboard.this).setVisible(true);
+                    }
+                }));
+
+        add(grid, BorderLayout.CENTER);
+
+        // === FOOTER ===
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        footer.setBackground(new Color(25, 25, 112));
+        JButton logout = new JButton("Logout");
+        styleButton(logout, Color.WHITE, new Color(25, 25, 112));
+        footer.add(logout);
+        add(footer, BorderLayout.SOUTH);
+
+        logout.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+                new LoginFrame().setVisible(true);
+            }
+        });
+    }
+
+    private JPanel createCard(final String title, final String subtitle, final Color color, final ActionListener action) {
+        final JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(color);
+        card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JLabel lblTitle = new JLabel(title, SwingConstants.CENTER);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblTitle.setForeground(Color.WHITE);
+
+        JLabel lblSubtitle = new JLabel(subtitle, SwingConstants.CENTER);
+        lblSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblSubtitle.setForeground(new Color(255, 255, 255, 230));
+
+        card.add(lblTitle, BorderLayout.CENTER);
+        card.add(lblSubtitle, BorderLayout.SOUTH);
+
+        final Color hoverColor = color.brighter();
+        card.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                card.setBackground(hoverColor);
+            }
+
+            public void mouseExited(MouseEvent e) {
+                card.setBackground(color);
+            }
+
+            public void mouseClicked(MouseEvent e) {
+                action.actionPerformed(null);
+            }
+        });
+
+        return card;
+    }
+
+    private void styleButton(JButton btn, Color bg, Color fg) {
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btn.setBackground(bg);
+        btn.setForeground(fg);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    }
+
+    public static void main(String[] args) {
+        User admin = new User(1, "admin", "admin123", User.Role.ADMIN);
+        new AdminDashboard(admin).setVisible(true);
+    }
+}
