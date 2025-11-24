@@ -1,0 +1,174 @@
+package com.sams;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class RegisterFrame extends JFrame {
+
+    private JTextField txtUser = new JTextField();
+    private JPasswordField txtPass = new JPasswordField();
+    private JComboBox<String> cmbRole = new JComboBox<String>(new String[]{"ADMIN", "COACH", "PLAYER"});
+
+    public RegisterFrame() {
+        setTitle("🏆 SAMS - Register");
+        setSize(850, 500);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // === LEFT PANEL (IMAGE SIDE) ===
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setBackground(new Color(25, 25, 112));
+
+        JLabel imgLabel = new JLabel();
+        imgLabel.setIcon(new ImageIcon("C:/Users/YEHOSI/Desktop/sports_login_bg.jpg")); // ✅ your image path
+        imgLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        leftPanel.add(imgLabel, BorderLayout.CENTER);
+
+        JLabel caption = new JLabel("Sports Assistant Management System", SwingConstants.CENTER);
+        caption.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        caption.setForeground(Color.WHITE);
+        caption.setBorder(BorderFactory.createEmptyBorder(10, 10, 20, 10));
+        leftPanel.add(caption, BorderLayout.SOUTH);
+
+        add(leftPanel, BorderLayout.WEST);
+
+        // === RIGHT PANEL (FORM SIDE) ===
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new GridBagLayout());
+        rightPanel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel lblTitle = new JLabel("Create Your Account", SwingConstants.CENTER);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblTitle.setForeground(new Color(25, 25, 112));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        rightPanel.add(lblTitle, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.gridy++;
+        rightPanel.add(new JLabel("Username:"), gbc);
+        gbc.gridx = 1;
+        txtUser.setPreferredSize(new Dimension(200, 30));
+        rightPanel.add(txtUser, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(new JLabel("Password:"), gbc);
+        gbc.gridx = 1;
+        rightPanel.add(txtPass, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(new JLabel("Role:"), gbc);
+        gbc.gridx = 1;
+        rightPanel.add(cmbRole, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.gridwidth = 2;
+
+        // === Buttons ===
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        final JButton btnReg = new JButton("Register");
+        final JButton btnCancel = new JButton("Cancel");
+        styleButton(btnReg, new Color(0, 153, 51));
+        styleButton(btnCancel, new Color(204, 0, 0));
+        btnPanel.add(btnReg);
+        btnPanel.add(btnCancel);
+        rightPanel.add(btnPanel, gbc);
+
+        // === Back to Login link ===
+        gbc.gridy++;
+        final JLabel backLabel = new JLabel("🔙 Back to Login");
+        backLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        backLabel.setForeground(new Color(25, 118, 210));
+        backLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        backLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        rightPanel.add(backLabel, gbc);
+
+        add(rightPanel, BorderLayout.CENTER);
+
+        // === ACTIONS (Java 1.7 safe) ===
+        btnReg.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String username = txtUser.getText().trim();
+                String password = new String(txtPass.getPassword());
+                String roleStr = cmbRole.getSelectedItem().toString();
+
+                if (username.isEmpty() || password.isEmpty()) {
+                    JOptionPane.showMessageDialog(RegisterFrame.this, "❌ Username and password cannot be empty!");
+                    return;
+                }
+
+                try {
+                    User.Role role = User.Role.valueOf(roleStr);
+                    User newUser = new User(username, password, role);
+                    DBHelper.getInstance().addUser(newUser);
+                    JOptionPane.showMessageDialog(RegisterFrame.this, "✅ Registration successful!");
+
+                    // After registration → go back to Login
+                    dispose();
+                    new LoginFrame().setVisible(true);
+
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(RegisterFrame.this, "❌ Registration failed!\n" + ex.getMessage());
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        btnCancel.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+                new LoginFrame().setVisible(true);
+            }
+        });
+
+        // Back to login hyperlink
+        backLabel.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                dispose();
+                new LoginFrame().setVisible(true);
+            }
+
+            public void mouseEntered(MouseEvent e) {
+                backLabel.setText("<html><u>🔙 Back to Login</u></html>");
+            }
+
+            public void mouseExited(MouseEvent e) {
+                backLabel.setText("🔙 Back to Login");
+            }
+        });
+    }
+
+    private void styleButton(final JButton btn, final Color color) {
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setBackground(color);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        final Color base = color;
+        final Color hover = base.brighter();
+        btn.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btn.setBackground(hover); }
+            public void mouseExited(MouseEvent e) { btn.setBackground(base); }
+        });
+    }
+
+    // For testing
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new RegisterFrame().setVisible(true);
+            }
+        });
+    }
+}
